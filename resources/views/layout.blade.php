@@ -36,7 +36,7 @@
         nav.tabs a.active { background: var(--accent-soft); color: var(--accent-text); }
         .spacer { flex: 1; }
         main { padding: 24px 0 48px; }
-        h1 { font-size: 22px; margin: 0 0 4px; overflow-wrap: anywhere; }
+        h1, h1.mono { font-size: 22px; margin: 0 0 4px; overflow-wrap: anywhere; }
         h2 { font-size: 15px; margin: 0 0 12px; }
         .sub { color: var(--muted); margin: 0 0 20px; }
         .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 18px; box-shadow: var(--shadow); margin-bottom: 18px; }
@@ -75,8 +75,9 @@
         .btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
         .btn.sm { padding: 3px 9px; font-size: 12.5px; }
         .btn[disabled] { opacity: .5; cursor: not-allowed; }
-        .flash { border: 1px solid var(--accent); background: var(--accent-soft); color: var(--text); border-radius: 12px; padding: 10px 14px; margin-bottom: 18px; }
-        .flash.error { border-color: var(--danger); background: var(--panel); }
+        .flash { position: fixed; z-index: 10; right: 16px; bottom: 16px; max-width: min(520px, calc(100vw - 32px)); border: 1px solid var(--accent); background: var(--panel); color: var(--text); border-radius: 12px; padding: 12px 40px 12px 14px; box-shadow: 0 8px 24px rgba(15, 23, 42, .18); }
+        .flash.error { border-color: var(--danger); }
+        .flash button { position: absolute; top: 6px; right: 8px; border: 0; background: none; color: var(--muted); font-size: 18px; cursor: pointer; }
         .note { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; color: var(--muted); margin: 10px 0 0; }
         .note.warn { border-left-color: var(--danger); }
         .yes { color: var(--on-text); font-weight: 700; }
@@ -116,10 +117,10 @@
 </header>
 <main class="wrap" id="top">
     @if (session('pennant-dashboard.status'))
-        <div class="flash" role="status">{{ session('pennant-dashboard.status') }}</div>
+        <div class="flash" role="status">{{ session('pennant-dashboard.status') }}<button type="button" aria-label="Dismiss" onclick="this.parentNode.remove()">×</button></div>
     @endif
     @if ($errors->any())
-        <div class="flash error" role="alert">{{ $errors->first() }}</div>
+        <div class="flash error" role="alert">{{ $errors->first() }}<button type="button" aria-label="Dismiss" onclick="this.parentNode.remove()">×</button></div>
     @endif
     @yield('content')
 </main>
@@ -136,8 +137,8 @@
         var pick = e.target.closest('[data-pick-key]');
         if (!pick) { return; }
         e.preventDefault();
-        document.querySelectorAll('input[name=scope_key]').forEach(function (input) { input.value = pick.getAttribute('data-pick-key'); });
-        document.querySelectorAll('select[name=scope_type]').forEach(function (select) { select.value = pick.getAttribute('data-pick-type'); });
+        document.querySelectorAll('input[data-scope-picker]').forEach(function (input) { input.value = pick.getAttribute('data-pick-key'); });
+        document.querySelectorAll('select[data-scope-picker]').forEach(function (select) { select.value = pick.getAttribute('data-pick-type'); });
     });
     document.querySelectorAll('[data-range-for]').forEach(function (range) {
         var target = document.getElementById(range.getAttribute('data-range-for'));

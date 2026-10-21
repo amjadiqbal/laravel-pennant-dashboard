@@ -79,7 +79,7 @@ Feature::define('{{ $feature->name }}', fn (User $user) =>
             <input type="hidden" name="store" value="{{ $store->name }}">
             <select name="search_type" aria-label="Search in">
                 @foreach ($scopeTypes as $class => $label)
-                    <option value="{{ $class }}" @selected(request('search_type') === $class)>{{ $label }}</option>
+                    <option value="{{ $class }}" @selected(request('search_type', $defaultType) === $class)>{{ $label }}</option>
                 @endforeach
             </select>
             <input name="q" value="{{ request('q') }}" placeholder="Search by ID, name or email">
@@ -97,7 +97,7 @@ Feature::define('{{ $feature->name }}', fn (User $user) =>
 
         <form method="post" action="{{ route('pennant-dashboard.scope') }}" class="row" style="margin-top: 12px;">
             @csrf {!! $hidden !!}<input type="hidden" name="return" value="scope">
-            @include('pennant-dashboard::partials.scope-picker', ['selectedType' => $check['type'] ?? request('scope_type', request('search_type')), 'selectedKey' => $check['scope_key'] ?? null])
+            @include('pennant-dashboard::partials.scope-picker', ['selectedType' => $check['type'] ?? request('scope_type', request('search_type', $defaultType)), 'selectedKey' => $check['scope_key'] ?? null])
             <button class="btn primary" name="action" value="activate" @disabled(! $canManage)>Activate</button>
             <button class="btn" name="action" value="deactivate" @disabled(! $canManage)>Deactivate</button>
             <button class="btn" name="action" value="forget" @disabled(! $canManage) title="Delete the stored value and the override; the resolver decides again">Forget</button>

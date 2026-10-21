@@ -1,6 +1,7 @@
 <?php
 
 use AmjadIqbal\PennantDashboard\Tests\Fixtures\Features\NewApi;
+use AmjadIqbal\PennantDashboard\Tests\Fixtures\Team;
 use AmjadIqbal\PennantDashboard\Tests\Fixtures\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -85,4 +86,22 @@ it('renders the audit log', function () {
 
     $this->get('/pennant/audit')->assertOk()->assertSee('artisan / console')->assertSee('dark-mode');
     $this->get('/pennant/audit?source=dashboard')->assertOk()->assertSee('No changes recorded yet.');
+});
+
+it('starts the scope pickers on the type the feature is stored for', function () {
+    $team = Team::query()->create(['name' => 'Acme']);
+    Feature::for($team)->active('team-billing');
+
+    $html = $this->get('/pennant/features/team-billing')->assertOk()->getContent();
+
+    expect(substr_count($html, 'value="'.e(Team::class).'" selected'))->toBeGreaterThanOrEqual(2);
+});
+
+it('marks only the picker fields for the search pick script, not the hidden row fields', function () {
+    Feature::for($this->user(1))->activate('dark-mode');
+
+    $html = $this->get('/pennant/features/dark-mode')->assertOk()->getContent();
+
+    expect(substr_count($html, 'name="scope_key" data-scope-picker'))->toBe(1)
+        ->and($html)->toContain('<input type="hidden" name="scope_key" value="'.e(User::class).'|1">');
 });

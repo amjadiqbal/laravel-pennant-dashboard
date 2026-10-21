@@ -83,6 +83,7 @@ final class DashboardController
 
         return view('pennant-dashboard::feature', [
             ...$this->shared($store),
+            'defaultType' => $this->defaultType($store, $scopes, $feature),
             'feature' => $info,
             'rows' => $rows,
             'overrides' => $overrides,
@@ -115,6 +116,19 @@ final class DashboardController
             'entries' => $entries,
             'labels' => $entries ? (new ScopeResolver($store))->describe(collect($entries->items())->pluck('scope')->filter()->unique()) : [],
         ]);
+    }
+
+    /** The model type this feature is stored for most, so the pickers start on it (team-billing → Team). */
+    private function defaultType(StoreInspector $store, ScopeResolver $scopes, string $feature): ?string
+    {
+        if (! $store->canListScopes()) {
+            return null;
+        }
+
+        $scope = rescue(fn () => $store->query()->where('name', $feature)->where('scope', 'like', '%|%')->value('scope'), null, false);
+        $parsed = $scope === null ? null : $scopes->parse((string) $scope);
+
+        return $parsed['class'] ?? null;
     }
 
     /** @return array<string, mixed> */
