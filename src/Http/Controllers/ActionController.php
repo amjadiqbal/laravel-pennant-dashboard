@@ -37,10 +37,11 @@ final class ActionController
             $this->actions->setForScope($store, $feature->name, $scope, $data['action'] === 'activate');
         }
 
-        $note = $store->persists() === false ? ' The array driver forgets it after this request; the override applies because the feature calls Rollout::decide().' : '';
-        if ($store->persists() === false && ! $feature->managed) {
-            $note = ' The array driver forgets it after this request, and this feature does not call Rollout::decide(), so it will not stick.';
-        }
+        $note = match (true) {
+            $store->persists() !== false || $data['action'] === 'forget' => '',
+            $feature->managed => ' The array driver keeps nothing between requests, but this sticks: the feature calls Rollout::decide(), which reads the override.',
+            default => ' The array driver keeps nothing between requests and this feature does not call Rollout::decide(), so it will not stick.',
+        };
 
         return $this->back($request, match ($data['action']) {
             'activate' => 'Activated',
