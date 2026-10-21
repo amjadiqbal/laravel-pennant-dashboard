@@ -1,0 +1,82 @@
+{
+    "name": "amjadiqbal/laravel-pennant-dashboard",
+    "description": "Standalone feature flag dashboard for Laravel Pennant: see every feature's state per user, team or any model, toggle it for one scope or everyone, run sticky percentage rollouts, purge stored values and keep an audit log of who changed what. Plain Blade, no Filament or Nova needed. Unofficial community package.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "amjadiqbal",
+        "laravel",
+        "laravel-package",
+        "laravel-pennant",
+        "pennant",
+        "feature-flags",
+        "feature-toggles",
+        "feature-management",
+        "percentage-rollout",
+        "gradual-rollout",
+        "dashboard",
+        "admin",
+        "audit-log",
+        "blade"
+    ],
+    "homepage": "https://amjad.com.pk/laravel/packages/laravel-pennant-dashboard",
+    "authors": [
+        {
+            "name": "Amjad Iqbal",
+            "homepage": "https://amjad.com.pk",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/amjadiqbal/laravel-pennant-dashboard/issues",
+        "source": "https://github.com/amjadiqbal/laravel-pennant-dashboard",
+        "docs": "https://amjad.com.pk/laravel/packages/laravel-pennant-dashboard"
+    },
+    "require": {
+        "php": "^8.3",
+        "illuminate/console": "^12.0|^13.0",
+        "illuminate/contracts": "^12.0|^13.0",
+        "illuminate/database": "^12.0|^13.0",
+        "illuminate/http": "^12.0|^13.0",
+        "illuminate/routing": "^12.0|^13.0",
+        "illuminate/support": "^12.0|^13.0",
+        "illuminate/view": "^12.0|^13.0",
+        "laravel/pennant": "^1.18"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.0|^11.0",
+        "pestphp/pest": "^3.0|^4.0",
+        "laravel/pint": "^1.0",
+        "larastan/larastan": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "AmjadIqbal\\PennantDashboard\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AmjadIqbal\\PennantDashboard\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "AmjadIqbal\\PennantDashboard\\PennantDashboardServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "pint": "vendor/bin/pint --test",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=1G"
+    }
+}

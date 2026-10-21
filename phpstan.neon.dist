@@ -1,0 +1,20 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 6
+    paths:
+        - src
+    tmpDir: build/phpstan
+    ignoreErrors:
+        # Namespaced package views (pennant-dashboard::index), registered in the service provider; Larastan only knows app views.
+        - identifier: argument.type
+          path: src/Http/Controllers/DashboardController.php
+          message: '#view-string#'
+        # HasRollout is for the app's own feature classes; the package itself never uses it.
+        - identifier: trait.unused
+          path: src/Concerns/HasRollout.php
+        # Decorator::setAll() exists from laravel/pennant 1.19; we support 1.18, so the check is real there.
+        - identifier: function.alreadyNarrowedType
+          path: src/FeatureActions.php
+          message: '#method_exists\(\)#'
