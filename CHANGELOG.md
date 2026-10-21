@@ -6,7 +6,7 @@ All notable changes to `laravel-pennant-dashboard` are documented here. The form
 
 ## [Unreleased]
 
-## [1.0.1] - 2026-10-22
+## [1.0.1] - 2026-10-21
 
 ### Security
 - "Check value" and "What does one scope see?" no longer write. They used Pennant's `value()`, which
