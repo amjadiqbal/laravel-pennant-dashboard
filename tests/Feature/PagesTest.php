@@ -53,6 +53,9 @@ it('checks the value one scope sees and explains why', function () {
 
     $this->get('/pennant/features/dark-mode?scope_type='.urlencode(User::class).'&scope_key='.$user->id)->assertOk()
         ->assertSee('Resolved just now')
+        ->assertDontSee('Rollout bucket');
+
+    $this->get('/pennant/features/new-checkout?scope_type='.urlencode(User::class).'&scope_key='.$user->id)->assertOk()
         ->assertSee('Rollout bucket');
 });
 

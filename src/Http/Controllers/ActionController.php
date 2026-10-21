@@ -11,6 +11,7 @@ use AmjadIqbal\PennantDashboard\Support\ScopeResolver;
 use AmjadIqbal\PennantDashboard\Support\StoreInspector;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 final class ActionController
 {
@@ -104,7 +105,7 @@ final class ActionController
         $purged = $this->actions->purgeStale($store);
 
         return redirect()->route('pennant-dashboard.index', ['store' => $store->name])
-            ->with('pennant-dashboard.status', $purged === [] ? 'No stale features to purge.' : 'Purged '.count($purged).' stale features: '.implode(', ', $purged).'.');
+            ->with('pennant-dashboard.status', $purged === [] ? 'No stale features to purge.' : 'Purged '.count($purged).' stale '.Str::plural('feature', count($purged)).': '.implode(', ', $purged).'.');
     }
 
     /** @return array{0: StoreInspector, 1: FeatureInfo} */

@@ -16,10 +16,13 @@
             @endif
             <td class="small">@if ($entry->scope)@include('pennant-dashboard::partials.scope-label', ['scope' => $entry->scope])@else<span class="muted">-</span>@endif</td>
             <td class="small">
-                @if ($entry->old_value !== null)@include('pennant-dashboard::partials.value', ['value' => json_decode($entry->old_value, true)]) → @endif
-                @if ($entry->new_value !== null)@include('pennant-dashboard::partials.value', ['value' => json_decode($entry->new_value, true)])@endif
-                @if (in_array($entry->action, ['rollout', 'rollout_cleared'], true))<span class="muted">%</span>@endif
-                @if ($entry->affected !== null)<span class="muted"> · {{ $entry->affected }} stored</span>@endif
+                @if (in_array($entry->action, ['rollout', 'rollout_cleared'], true))
+                    {{ $entry->old_value !== null ? json_decode($entry->old_value).'%' : 'no rollout' }} → {{ $entry->new_value !== null ? json_decode($entry->new_value).'%' : 'no rollout' }}
+                @else
+                    @if ($entry->old_value !== null)@include('pennant-dashboard::partials.value', ['value' => json_decode($entry->old_value, true)]) → @endif
+                    @if ($entry->new_value !== null)@include('pennant-dashboard::partials.value', ['value' => json_decode($entry->new_value, true)])@endif
+                @endif
+                @if ($entry->affected !== null)<div class="muted">{{ $entry->affected }} stored {{ \Illuminate\Support\Str::plural('value', $entry->affected) }}</div>@endif
             </td>
         </tr>
     @empty

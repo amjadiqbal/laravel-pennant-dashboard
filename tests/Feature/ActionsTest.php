@@ -175,7 +175,7 @@ it('purges stale features that are stored but no longer defined', function () {
     DB::table('features')->insert(['name' => 'old-flag', 'scope' => 'x', 'value' => 'true', 'created_at' => now(), 'updated_at' => now()]);
     Feature::for($this->user(1))->active('dark-mode');
 
-    $this->post('/pennant/actions/purge-stale', [])->assertSessionHas('pennant-dashboard.status', 'Purged 1 stale features: old-flag.');
+    $this->post('/pennant/actions/purge-stale', [])->assertSessionHas('pennant-dashboard.status', 'Purged 1 stale feature: old-flag.');
 
     expect(DB::table('features')->pluck('name')->all())->toBe(['dark-mode']);
 });

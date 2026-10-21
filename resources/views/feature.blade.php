@@ -115,7 +115,9 @@ Feature::define('{{ $feature->name }}', fn (User $user) =>
                     <div class="small">
                         @if ($check['override'])Set for this scope from the dashboard (override). @endif
                         @if ($check['resolvedNow'])Resolved just now by your resolver and stored by Pennant. @endif
-                        @if ($check['bucket'] !== null)Rollout bucket {{ $check['bucket'] }} of 100 @if ($feature->percentage !== null) (in a {{ $feature->percentage }}% rollout: {{ $check['bucket'] < $feature->percentage ? 'in' : 'out' }})@endif.@endif
+                        @if ($check['bucket'] !== null && ($feature->percentage !== null || $feature->managed))
+                            Rollout bucket {{ $check['bucket'] }} of 100{{ $feature->percentage !== null ? ' (in a '.$feature->percentage.'% rollout: '.($check['bucket'] < $feature->percentage ? 'in' : 'out').')' : '' }}.
+                        @endif
                     </div>
                 </div>
             @endif
