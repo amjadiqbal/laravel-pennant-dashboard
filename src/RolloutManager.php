@@ -11,7 +11,8 @@ use Laravel\Pennant\Feature;
 use Throwable;
 
 /**
- * Bound as a scoped singleton: rules and overrides are read once per request (or job) per feature.
+ * Bound as a scoped singleton: rules and overrides are read once per request (or job) per store and feature.
+ * The store defaults to Pennant's default store; pass it when a feature is resolved in another store.
  */
 class RolloutManager
 {
@@ -21,19 +22,19 @@ class RolloutManager
     /** @var array<string, int|null> */
     private array $percentages = [];
 
-    public function decide(string $feature, mixed $scope, mixed $default = false): mixed
+    public function decide(string $feature, mixed $scope, mixed $default = false, ?string $store = null): mixed
     {
         $key = self::serialize($scope);
 
         if ($key !== null) {
-            $overrides = $this->overrides($feature);
+            $overrides = $this->overrides($feature, $store);
 
             if (array_key_exists($key, $overrides)) {
                 return $overrides[$key];
             }
         }
 
-        $percentage = $this->percentage($feature);
+        $percentage = $this->percentage($feature, $store);
 
         if ($percentage !== null) {
             return match (true) {
@@ -46,34 +47,45 @@ class RolloutManager
         return $default instanceof Closure ? $default($scope) : $default;
     }
 
-    public function percentage(string $feature): ?int
+    public function percentage(string $feature, ?string $store = null): ?int
     {
-        if (! array_key_exists($feature, $this->percentages)) {
+        $store = self::store($store);
+        $memo = $store."\0".$feature;
+
+        if (! array_key_exists($memo, $this->percentages)) {
             try {
-                $this->percentages[$feature] = Rule::query()->where('feature', $feature)->value('percentage');
+                $this->percentages[$memo] = Rule::query()->where('store', $store)->where('feature', $feature)->value('percentage');
             } catch (Throwable) {
                 // Tables not migrated yet: behave as if the dashboard had never been used.
-                $this->percentages[$feature] = null;
+                $this->percentages[$memo] = null;
             }
         }
 
-        return $this->percentages[$feature] === null ? null : (int) $this->percentages[$feature];
+        return $this->percentages[$memo] === null ? null : (int) $this->percentages[$memo];
     }
 
     /** @return array<string, mixed> */
-    public function overrides(string $feature): array
+    public function overrides(string $feature, ?string $store = null): array
     {
-        if (! array_key_exists($feature, $this->overrides)) {
+        $store = self::store($store);
+        $memo = $store."\0".$feature;
+
+        if (! array_key_exists($memo, $this->overrides)) {
             try {
-                $this->overrides[$feature] = Override::query()->where('feature', $feature)->pluck('value', 'scope')
+                $this->overrides[$memo] = Override::query()->where('store', $store)->where('feature', $feature)->pluck('value', 'scope')
                     ->map(fn ($value) => json_decode((string) $value, true))
                     ->all();
             } catch (Throwable) {
-                $this->overrides[$feature] = [];
+                $this->overrides[$memo] = [];
             }
         }
 
-        return $this->overrides[$feature];
+        return $this->overrides[$memo];
+    }
+
+    public static function store(?string $store = null): string
+    {
+        return $store ?? (string) (config('pennant.default') ?? 'database');
     }
 
     public function flush(): void

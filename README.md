@@ -33,14 +33,19 @@ Docs and demo: https://amjad.com.pk/laravel/packages/laravel-pennant-dashboard
 - **Shows each feature's state per scope.** On the database driver you get every stored value with a
   readable label ("User #42 · ada@example.com"), filters by scope type and on/off, and counts per feature.
 - **Turns a feature on or off for one scope**: a user, a team, any Eloquent model, `Feature::globally()`,
-  or any scope string exactly as Pennant stores it. Search users by name or email.
+  or any scope string exactly as Pennant stores it. Search by ID or by the configured `search_columns`
+  (name and email by default).
 - **Turns a feature on or off for everyone** with Pennant's own `activateForEveryone()`.
 - **Percentage rollouts with sticky assignment.** Each scope gets a fixed bucket from 0 to 99, so the
   same users stay in the rollout on every request and every server, and raising 25% to 50% only adds users.
+  Lowering it removes the users above the new percentage, except those with an override.
 - **Purges** one feature, or every stale feature, through `Feature::purge()`.
-- **Audit log**: who changed what and when, with the old and new value and the IP. Changes made by your
-  own code (`Feature::activate()`) or artisan (`pennant:purge`) are logged too, marked as such.
-- **"What does this user see?"**: every feature's value for one scope, on one screen.
+- **Audit log**: who changed what and when. Dashboard changes record the signed-in user, the IP and the
+  old and new value. Changes made by your own code (`Feature::activate()`) or artisan (`pennant:purge`)
+  are logged too, marked as such, with what Pennant's events carry: the feature, the scope and the new
+  value (no old value, and no IP).
+- **"What does this user see?"**: every feature's value for one scope, on one screen. It is a read-only
+  preview: it never stores a value, so it is safe in read-only mode and for view-only users.
 - **Reports what your driver supports.** Database and array drivers are fully handled; for a custom
   driver the dashboard says which Pennant contracts it implements and what that means.
 
@@ -88,7 +93,8 @@ Gate::define('managePennantDashboard', fn (User $user) => $user->email === 'ops@
 ```
 
 Without your own `viewPennantDashboard` gate the dashboard is open in the `local` environment only.
-Set `PENNANT_DASHBOARD_READ_ONLY=true` to block every change whatever the gates say, and
+Set `PENNANT_DASHBOARD_READ_ONLY=true` to block every change whatever the gates say (previews and
+"Check value" never write, so they stay available), and
 `PENNANT_DASHBOARD_ENABLED=false` to remove the routes.
 
 ## Rollouts and "everyone"
@@ -131,7 +137,7 @@ The dashboard marks these features **rollout-ready**. For them:
 |---|---|---|
 | Activate / deactivate for one scope | that scope is set, and remembered as an override | n/a |
 | Activate / deactivate for everyone | all overwritten, overrides cleared | follow it (saved as a 100% / 0% rule) |
-| Rollout N% | re-bucketed, overrides kept | follow it |
+| Rollout N% | re-bucketed (lowering it turns scopes above N off), overrides kept | follow it |
 | Remove rollout | forgotten (overrides kept), resolve from your code again | your default |
 | Purge | deleted, overrides cleared | your default (or the rollout, if you keep it) |
 
@@ -155,6 +161,16 @@ users are not always first.
 The dashboard shows this table for the store you are looking at, read from the contracts the driver
 really implements (`CanListStoredFeatures`, `CanSetManyFeaturesForScopes`, `DefinesFeaturesExternally`).
 With several stores in `config/pennant.php`, a store picker appears in the header.
+
+Rollouts and overrides belong to the store they were set in. `Rollout::decide()` reads Pennant's
+default store; for a feature you resolve through another store, pass it:
+
+```php
+Feature::store('redis')->define('new-checkout', fn (User $user) =>
+    Rollout::decide('new-checkout', $user, default: false, store: 'redis'));
+
+// or in a class feature: $this->rollout($user, default: false, store: 'redis')
+```
 
 ## Configuration
 
@@ -187,9 +203,10 @@ light and dark mode, a few lines of vanilla JavaScript, no build step and no CDN
 
 ## Good to know
 
-- **Checking a value resolves it.** "Check value" and "What does one scope see?" read features through
-  Pennant exactly as your app does, so a scope that was never checked is resolved (and stored, on the
-  database driver) at that moment. The dashboard tells you when that happened.
+- **Checking a value stores nothing.** "Check value" and "What does one scope see?" show the stored
+  value where there is one (after a class feature's `before()` hook, as Pennant does), otherwise what
+  your resolver returns now, without storing it, caching it or firing Pennant events. Lotteries are not
+  drawn. Your resolver does run, so keep resolvers free of side effects.
 - **Rollouts are for on/off features.** Features with rich values (strings, arrays) can be viewed,
   forgotten and purged; the rollout writes `true` or `false`.
 - **Class features are discovered only on dashboard pages.** Your app's own requests are not touched.

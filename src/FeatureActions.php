@@ -36,7 +36,7 @@ class FeatureActions
 
             if ($key !== null) {
                 Override::query()->updateOrCreate(
-                    ['feature' => $feature, 'scope' => $key],
+                    ['store' => $store->name, 'feature' => $feature, 'scope' => $key],
                     ['value' => json_encode($active), 'updated_by' => $this->actor()],
                 );
             }
@@ -54,7 +54,7 @@ class FeatureActions
 
         $this->audit->muted(function () use ($store, $feature, $scope, $key) {
             $store->decorator->for($scope)->forget($feature);
-            Override::query()->where('feature', $feature)->where('scope', $key)->delete();
+            Override::query()->where('store', $store->name)->where('feature', $feature)->where('scope', $key)->delete();
         });
 
         $this->rollouts->flush();
@@ -75,10 +75,10 @@ class FeatureActions
                 ? $store->decorator->activateForEveryone($feature)
                 : $store->decorator->deactivateForEveryone($feature);
 
-            Override::query()->where('feature', $feature)->delete();
+            Override::query()->where('store', $store->name)->where('feature', $feature)->delete();
 
             if ($managed) {
-                Rule::query()->updateOrCreate(['feature' => $feature], ['percentage' => $active ? 100 : 0, 'updated_by' => $this->actor()]);
+                Rule::query()->updateOrCreate(['store' => $store->name, 'feature' => $feature], ['percentage' => $active ? 100 : 0, 'updated_by' => $this->actor()]);
             }
         });
 
@@ -96,10 +96,10 @@ class FeatureActions
     public function setRollout(StoreInspector $store, string $feature, int $percentage): int
     {
         $percentage = max(0, min(100, $percentage));
-        $old = $this->rollouts->percentage($feature);
+        $old = $this->rollouts->percentage($feature, $store->name);
 
         $changed = $this->audit->muted(function () use ($store, $feature, $percentage) {
-            Rule::query()->updateOrCreate(['feature' => $feature], ['percentage' => $percentage, 'updated_by' => $this->actor()]);
+            Rule::query()->updateOrCreate(['store' => $store->name, 'feature' => $feature], ['percentage' => $percentage, 'updated_by' => $this->actor()]);
 
             return $this->rebucket($store, $feature, $percentage);
         });
@@ -113,10 +113,10 @@ class FeatureActions
     /** Remove the rollout: stored values that are not overrides are forgotten and resolve from code again. */
     public function clearRollout(StoreInspector $store, string $feature): int
     {
-        $old = $this->rollouts->percentage($feature);
+        $old = $this->rollouts->percentage($feature, $store->name);
 
         $forgotten = $this->audit->muted(function () use ($store, $feature) {
-            Rule::query()->where('feature', $feature)->delete();
+            Rule::query()->where('store', $store->name)->where('feature', $feature)->delete();
 
             return $this->forgetUnpinned($store, $feature);
         });
@@ -134,10 +134,10 @@ class FeatureActions
 
         $this->audit->muted(function () use ($store, $feature, $withRule) {
             $store->decorator->purge($feature);
-            Override::query()->where('feature', $feature)->delete();
+            Override::query()->where('store', $store->name)->where('feature', $feature)->delete();
 
             if ($withRule) {
-                Rule::query()->where('feature', $feature)->delete();
+                Rule::query()->where('store', $store->name)->where('feature', $feature)->delete();
             }
         });
 
@@ -172,7 +172,7 @@ class FeatureActions
             return 0;
         }
 
-        $pinned = array_flip(Override::query()->where('feature', $feature)->pluck('scope')->map(fn ($s) => (string) $s)->all());
+        $pinned = array_flip(Override::query()->where('store', $store->name)->where('feature', $feature)->pluck('scope')->map(fn ($s) => (string) $s)->all());
         $changed = 0;
 
         $store->query()->where('name', $feature)->orderBy('id')->chunkById(500, function ($rows) use ($store, $feature, $percentage, $pinned, &$changed) {
@@ -215,7 +215,7 @@ class FeatureActions
             return 0;
         }
 
-        $pinned = Override::query()->where('feature', $feature)->pluck('scope')->map(fn ($s) => (string) $s)->all();
+        $pinned = Override::query()->where('store', $store->name)->where('feature', $feature)->pluck('scope')->map(fn ($s) => (string) $s)->all();
         $forgotten = 0;
 
         $store->query()->where('name', $feature)->orderBy('id')->chunkById(500, function ($rows) use ($store, $feature, $pinned, &$forgotten) {
@@ -242,7 +242,7 @@ class FeatureActions
             return json_decode($stored, true);
         }
 
-        return $this->rollouts->overrides($feature)[$key] ?? null;
+        return $this->rollouts->overrides($feature, $store->name)[$key] ?? null;
     }
 
     private function actor(): ?string

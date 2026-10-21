@@ -11,12 +11,13 @@ namespace AmjadIqbal\PennantDashboard;
  *
  * It returns the dashboard override for this scope if there is one, otherwise the
  * rollout result (on for a sticky N% of scopes), otherwise your default.
+ * Rules and overrides belong to a Pennant store: Pennant's default store unless you pass another.
  */
 final class Rollout
 {
-    public static function decide(string $feature, mixed $scope, mixed $default = false): mixed
+    public static function decide(string $feature, mixed $scope, mixed $default = false, ?string $store = null): mixed
     {
-        return app(RolloutManager::class)->decide($feature, $scope, $default);
+        return app(RolloutManager::class)->decide($feature, $scope, $default, $store);
     }
 
     /**

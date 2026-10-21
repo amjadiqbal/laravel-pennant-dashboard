@@ -52,8 +52,11 @@ it('checks the value one scope sees and explains why', function () {
     $user = $this->user(3);
 
     $this->get('/pennant/features/dark-mode?scope_type='.urlencode(User::class).'&scope_key='.$user->id)->assertOk()
-        ->assertSee('Resolved just now')
+        ->assertSee('Not stored yet')
+        ->assertSee('Nothing was stored by checking')
         ->assertDontSee('Rollout bucket');
+
+    expect(DB::table('features')->count())->toBe(0);
 
     $this->get('/pennant/features/new-checkout?scope_type='.urlencode(User::class).'&scope_key='.$user->id)->assertOk()
         ->assertSee('Rollout bucket');
@@ -66,6 +69,8 @@ it('shows what one user sees across all features', function () {
         ->assertSee('What does one scope see?')
         ->assertSee('dark-mode')
         ->assertDontSee('TypeError');
+
+    expect(DB::table('features')->count())->toBe(0);
 });
 
 it('searches users by name or email', function () {

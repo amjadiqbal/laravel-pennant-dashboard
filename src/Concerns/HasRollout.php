@@ -23,9 +23,9 @@ use ReflectionClass;
  */
 trait HasRollout
 {
-    protected function rollout(mixed $scope, mixed $default = false): mixed
+    protected function rollout(mixed $scope, mixed $default = false, ?string $store = null): mixed
     {
-        return Rollout::decide($this->pennantFeatureName(), $scope, $default);
+        return Rollout::decide($this->pennantFeatureName(), $scope, $default, $store);
     }
 
     /** The name Pennant registers this class under: #[Name], then a $name property, then the class. */

@@ -90,13 +90,13 @@
                         @forelse ($inspection['values'] as $name => $result)
                             <tr>
                                 <td class="mono"><a href="{{ route('pennant-dashboard.feature', ['feature' => $name, 'store' => $store->name]) }}">{{ $name }}</a></td>
-                                <td>@if ($result['error'])<span class="small" style="color: var(--danger)">{{ $result['error'] }}</span>@else @include('pennant-dashboard::partials.value', ['value' => $result['value']]) @endif</td>
+                                <td>@if ($result['error'])<span class="small" style="color: var(--danger)">{{ $result['error'] }}</span>@elseif ($result['source'] === 'lottery')<span class="muted small">lottery, decided on first check</span>@else @include('pennant-dashboard::partials.value', ['value' => $result['value']]) @if ($result['source'] === 'resolver' && $store->canListScopes())<span class="muted small"> not stored</span>@endif @endif</td>
                             </tr>
                         @empty
                             <tr><td class="muted">No defined feature accepts this scope type.</td></tr>
                         @endforelse
                     </table>
-                    <p class="note small">Values are read through Pennant exactly as your app reads them, so a scope that was never checked is resolved (and stored, on the database driver) now.</p>
+                    <p class="note small">Read-only preview: stored values where they exist, otherwise what your resolver returns now. Nothing is stored by checking; <i>not stored</i> marks values Pennant has not stored yet.</p>
                 @endif
             @endif
         </div>

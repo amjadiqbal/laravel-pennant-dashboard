@@ -48,7 +48,7 @@
                     <button class="btn sm" @disabled(! $canManage)>Remove rollout</button>
                 </form>
             @endif
-            <p class="note small">Sticky: each scope gets a fixed bucket from 0 to 99 (a hash of the feature and the scope), and is in the rollout when its bucket is below the percentage. Raising the percentage only adds scopes. Overrides set for one scope are never changed.</p>
+            <p class="note small">Sticky: each scope gets a fixed bucket from 0 to 99 (a hash of the feature and the scope), and is in the rollout when its bucket is below the percentage. Raising the percentage only adds scopes; lowering it turns off the scopes above the new percentage. Overrides set for one scope are never changed.</p>
             @unless ($feature->managed)
                 <p class="note warn small">This feature's resolver does not call <code>Rollout::decide()</code> yet, so the rollout only re-buckets values that are already stored. Opt in:</p>
                 @if ($feature->kind === 'class')
@@ -110,11 +110,17 @@ Feature::define('{{ $feature->name }}', fn (User $user) =>
             @else
                 <div class="note">
                     @include('pennant-dashboard::partials.scope-label', ['scope' => $check['key'], 'labels' => [$check['key'] => $check['label']]])
-                    sees
-                    @if ($check['error'])<span style="color: var(--danger)">{{ $check['error'] }}</span>@else @include('pennant-dashboard::partials.value', ['value' => $check['value']]) @endif
+                    {{ $check['source'] === 'lottery' ? 'gets' : 'sees' }}
+                    @if ($check['error'])<span style="color: var(--danger)">{{ $check['error'] }}</span>@elseif ($check['source'] === 'lottery')<b>a random value</b>@else @include('pennant-dashboard::partials.value', ['value' => $check['value']]) @endif
                     <div class="small">
                         @if ($check['override'])Set for this scope from the dashboard (override). @endif
-                        @if ($check['resolvedNow'])Resolved just now by your resolver and stored by Pennant. @endif
+                        @switch ($check['source'])
+                            @case('before') From the feature class's before() hook, which runs ahead of stored values. @break
+                            @case('stored') The value Pennant has stored for this scope. @break
+                            @case('lottery') A lottery: decided at random on this scope's first real check. @break
+                            @case('resolver') {{ $store->canListScopes() ? 'Not stored yet: this is what your resolver returns now. Pennant stores it on the first real check.' : 'What your resolver returns now. This driver cannot show stored values, so a value stored earlier may differ.' }} @break
+                        @endswitch
+                        Nothing was stored by checking.
                         @if ($check['bucket'] !== null && ($feature->percentage !== null || $feature->managed))
                             Rollout bucket {{ $check['bucket'] }} of 100{{ $feature->percentage !== null ? ' (in a '.$feature->percentage.'% rollout: '.($check['bucket'] < $feature->percentage ? 'in' : 'out').')' : '' }}.
                         @endif

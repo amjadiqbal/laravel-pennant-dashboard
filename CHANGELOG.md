@@ -6,6 +6,24 @@ All notable changes to `laravel-pennant-dashboard` are documented here. The form
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-22
+
+### Security
+- "Check value" and "What does one scope see?" no longer write. They used Pennant's `value()`, which
+  stores the resolved value for a scope that was never checked, so a view-only user (or anyone in
+  read-only mode) could create stored values through a GET request. They now preview without
+  storing, caching or firing Pennant events.
+
+### Fixed
+- Rollout rules and per-scope overrides are now kept per Pennant store. A rollout set in one store
+  no longer applies to a feature with the same name in another store. A new migration adds a `store`
+  column and assigns existing rows to the default store, which is where 1.0.0 read them.
+  `Rollout::decide()` and `HasRollout::rollout()` take an optional `store` argument.
+
+### Changed
+- README: what the audit log records for code and artisan changes, what lowering a rollout does,
+  and what the scope search matches.
+
 ## [1.0.0] - 2026-10-21
 
 ### Added

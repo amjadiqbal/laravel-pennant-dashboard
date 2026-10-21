@@ -53,8 +53,8 @@ class FeatureCatalog
 
         $defined = array_map('strval', $this->store->decorator->defined());
         $stored = $this->store->storedFeatureNames();
-        $rules = $this->safe(fn () => Rule::query()->pluck('percentage', 'feature')->all(), []);
-        $overrides = $this->safe(fn () => Override::query()->selectRaw('feature, count(*) as aggregate')->groupBy('feature')->pluck('aggregate', 'feature')->all(), []);
+        $rules = $this->safe(fn () => Rule::query()->where('store', $this->store->name)->pluck('percentage', 'feature')->all(), []);
+        $overrides = $this->safe(fn () => Override::query()->where('store', $this->store->name)->selectRaw('feature, count(*) as aggregate')->groupBy('feature')->pluck('aggregate', 'feature')->all(), []);
         $counts = $this->store->counts();
 
         $names = array_unique([...$defined, ...$stored, ...array_keys($rules), ...array_keys($overrides)]);

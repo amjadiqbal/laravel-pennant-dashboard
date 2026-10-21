@@ -11,13 +11,13 @@ use AmjadIqbal\PennantDashboard\PennantDashboardServiceProvider;
 use AmjadIqbal\PennantDashboard\Rollout;
 use AmjadIqbal\PennantDashboard\RolloutManager;
 use AmjadIqbal\PennantDashboard\Support\FeatureCatalog;
+use AmjadIqbal\PennantDashboard\Support\Preview;
 use AmjadIqbal\PennantDashboard\Support\ScopeResolver;
 use AmjadIqbal\PennantDashboard\Support\StoreInspector;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
-use Throwable;
 
 final class DashboardController
 {
@@ -53,7 +53,7 @@ final class DashboardController
         abort_if($info === null, 404, "Feature [{$feature}] is not defined or stored in the [{$store->name}] store.");
 
         $scopes = new ScopeResolver($store);
-        $overrides = rescue(fn () => Override::query()->where('feature', $feature)->pluck('value', 'scope')->map(fn ($v) => json_decode((string) $v, true))->all(), [], false);
+        $overrides = rescue(fn () => Override::query()->where('store', $store->name)->where('feature', $feature)->pluck('value', 'scope')->map(fn ($v) => json_decode((string) $v, true))->all(), [], false);
 
         $rows = null;
         if ($store->canListScopes()) {
@@ -155,12 +155,9 @@ final class DashboardController
         $applicable = rescue(fn () => $store->decorator->definedFeaturesForScope($scope)->all(), [], false);
         $values = [];
 
+        $preview = new Preview($store);
         foreach ($applicable as $feature) {
-            try {
-                $values[(string) $feature] = ['value' => $store->decorator->for($scope)->value($feature), 'error' => null];
-            } catch (Throwable $e) {
-                $values[(string) $feature] = ['value' => null, 'error' => class_basename($e).': '.$e->getMessage()];
-            }
+            $values[(string) $feature] = $preview->value((string) $feature, $scope);
         }
 
         return [
@@ -181,27 +178,18 @@ final class DashboardController
         }
 
         $key = $scopes->serialize($scope);
-        $storedBefore = $key !== null ? $store->storedValue($feature, $key) : null;
-        $manager = app(RolloutManager::class);
-
-        try {
-            $value = $store->decorator->for($scope)->value($feature);
-            $error = null;
-        } catch (Throwable $e) {
-            $value = null;
-            $error = class_basename($e).': '.$e->getMessage();
-        }
+        $preview = (new Preview($store))->value($feature, $scope);
 
         return [
-            'error' => $error,
+            'error' => $preview['error'],
             'scope' => $scope,
             'type' => (string) $request->input('scope_type'),
             'scope_key' => (string) $request->input('scope_key'),
             'key' => $key,
             'label' => $key !== null ? ($scopes->describe([$key])[$key] ?? null) : null,
-            'value' => $value,
-            'resolvedNow' => $store->canListScopes() && $storedBefore === null,
-            'override' => $key !== null && array_key_exists($key, $manager->overrides($feature)),
+            'value' => $preview['value'],
+            'source' => $preview['source'],
+            'override' => $key !== null && array_key_exists($key, app(RolloutManager::class)->overrides($feature, $store->name)),
             'bucket' => $key !== null ? Rollout::bucket($feature, $key) : null,
         ];
     }
