@@ -12,6 +12,7 @@ use AmjadIqbal\PennantDashboard\Rollout;
 use AmjadIqbal\PennantDashboard\RolloutManager;
 use AmjadIqbal\PennantDashboard\Support\FeatureCatalog;
 use AmjadIqbal\PennantDashboard\Support\Preview;
+use AmjadIqbal\PennantDashboard\Support\SchemaStatus;
 use AmjadIqbal\PennantDashboard\Support\ScopeResolver;
 use AmjadIqbal\PennantDashboard\Support\StoreInspector;
 use Illuminate\Contracts\View\View;
@@ -139,6 +140,7 @@ final class DashboardController
             'stores' => StoreInspector::names(),
             'canManage' => Authorize::canManage(),
             'version' => PennantDashboardServiceProvider::version(),
+            'schemaProblem' => SchemaStatus::message(SchemaStatus::check()),
         ];
     }
 

@@ -78,6 +78,8 @@
         .flash { position: fixed; z-index: 10; right: 16px; bottom: 16px; max-width: min(520px, calc(100vw - 32px)); border: 1px solid var(--accent); background: var(--panel); color: var(--text); border-radius: 12px; padding: 12px 40px 12px 14px; box-shadow: 0 8px 24px rgba(15, 23, 42, .18); }
         .flash.error { border-color: var(--danger); }
         .flash button { position: absolute; top: 6px; right: 8px; border: 0; background: none; color: var(--muted); font-size: 18px; cursor: pointer; }
+        .banner { border: 1px solid var(--danger); }
+        .banner b { color: var(--danger); }
         .note { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; color: var(--muted); margin: 10px 0 0; }
         .note.warn { border-left-color: var(--danger); }
         .yes { color: var(--on-text); font-weight: 700; }
@@ -116,6 +118,9 @@
     </div>
 </header>
 <main class="wrap" id="top">
+    @if (! empty($schemaProblem))
+        <div class="panel banner" role="alert"><b>Run the migrations.</b> {{ $schemaProblem }}</div>
+    @endif
     @if (session('pennant-dashboard.status'))
         <div class="flash" role="status">{{ session('pennant-dashboard.status') }}<button type="button" aria-label="Dismiss" onclick="this.parentNode.remove()">×</button></div>
     @endif

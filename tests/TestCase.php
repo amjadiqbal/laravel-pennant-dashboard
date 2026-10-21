@@ -5,6 +5,7 @@ namespace AmjadIqbal\PennantDashboard\Tests;
 use AmjadIqbal\PennantDashboard\PennantDashboardServiceProvider;
 use AmjadIqbal\PennantDashboard\Rollout;
 use AmjadIqbal\PennantDashboard\Support\FeatureCatalog;
+use AmjadIqbal\PennantDashboard\Support\SchemaStatus;
 use AmjadIqbal\PennantDashboard\Tests\Fixtures\Team;
 use AmjadIqbal\PennantDashboard\Tests\Fixtures\User;
 use Illuminate\Database\Schema\Blueprint;
@@ -52,6 +53,7 @@ abstract class TestCase extends Orchestra
     {
         parent::setUp();
         FeatureCatalog::resetDiscovery();
+        SchemaStatus::resetWarnings();
 
         Feature::define('new-checkout', fn (User $user) => Rollout::decide('new-checkout', $user, false));
         Feature::define('dark-mode', fn (User $user) => false);

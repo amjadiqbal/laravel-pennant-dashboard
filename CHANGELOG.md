@@ -6,6 +6,19 @@ All notable changes to `laravel-pennant-dashboard` are documented here. The form
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-21
+
+### Fixed
+- Upgrading from 1.0.0 without running the new migration no longer fails quietly. `Rollout::decide()`
+  used to fall back to your default (rollouts silently stopped) and dashboard writes returned a 500.
+  Now the dashboard shows a "run the migrations" banner and refuses changes with that message,
+  `php artisan about` shows the migration as pending, the log gets one warning per process, and
+  `Rollout::decide()` keeps reading the 1.0.0 tables the way 1.0.0 did until you migrate.
+
+### Upgrade note
+- 1.0.1 and later need `php artisan migrate`. With `run_migrations` set to `false`, publish the
+  migrations again first: `php artisan vendor:publish --tag=pennant-dashboard-migrations`.
+
 ## [1.0.1] - 2026-10-21
 
 ### Security
@@ -19,6 +32,10 @@ All notable changes to `laravel-pennant-dashboard` are documented here. The form
   no longer applies to a feature with the same name in another store. A new migration adds a `store`
   column and assigns existing rows to the default store, which is where 1.0.0 read them.
   `Rollout::decide()` and `HasRollout::rollout()` take an optional `store` argument.
+
+### Upgrade note
+- Run `php artisan migrate`: a new migration adds the `store` column. With `run_migrations` set to
+  `false`, publish the migrations again first (`--tag=pennant-dashboard-migrations`).
 
 ### Changed
 - README: what the audit log records for code and artisan changes, what lowering a rollout does,

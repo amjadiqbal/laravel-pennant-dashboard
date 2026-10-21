@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AmjadIqbal\PennantDashboard;
 
 use AmjadIqbal\PennantDashboard\Http\Authorize;
+use AmjadIqbal\PennantDashboard\Support\SchemaStatus;
 use Composer\InstalledVersions;
 use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Support\Facades\Event;
@@ -54,6 +55,7 @@ final class PennantDashboardServiceProvider extends ServiceProvider
 
         AboutCommand::add('Pennant Dashboard', fn (): array => [
             'Version' => self::version(),
+            'Migrations' => SchemaStatus::message($status = SchemaStatus::check()) === null ? 'up to date' : '<fg=yellow;options=bold>'.($status === SchemaStatus::MISSING ? 'missing' : 'outdated').': run php artisan migrate</>',
             'Dashboard' => config('pennant-dashboard.enabled', true) ? '/'.trim((string) config('pennant-dashboard.path'), '/') : 'off',
             'Support' => 'https://amjad.com.pk/contact?utm_source=artisan&utm_medium=about&utm_campaign=laravel-pennant-dashboard',
         ]);

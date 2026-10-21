@@ -79,6 +79,27 @@ The migration adds three small tables: `pennant_dashboard_rules` (rollout percen
 
 Open `/pennant` in your browser. Outside `local` it returns 403 until you define who may see it.
 
+## Upgrading
+
+Run the migrations after every upgrade:
+
+```bash
+composer update amjadiqbal/laravel-pennant-dashboard
+php artisan migrate
+```
+
+1.0.1 added a `store` column to the rollout and override tables. If you set `run_migrations` to
+`false` and published the migrations, publish again first (only the new file is copied):
+
+```bash
+php artisan vendor:publish --tag=pennant-dashboard-migrations
+php artisan migrate
+```
+
+Until the tables are migrated, the dashboard shows a banner and refuses changes, `php artisan about`
+says the migration is pending, and the log gets one warning per process. `Rollout::decide()` keeps
+working the way 1.0.0 did in the meantime (rules apply to the feature in every store).
+
 ## Who can open it
 
 Two gates, defined in a service provider (for example `AppServiceProvider::boot()`):

@@ -42,7 +42,7 @@ return new class extends Migration
         $rules = config('pennant-dashboard.tables.rules', 'pennant_dashboard_rules');
         $overrides = config('pennant-dashboard.tables.overrides', 'pennant_dashboard_overrides');
 
-        if (! Schema::hasTable($rules) || ! Schema::hasTable($overrides)) {
+        if (! Schema::hasTable($rules) || ! Schema::hasTable($overrides) || ! Schema::hasColumn($rules, 'store')) {
             return;
         }
 

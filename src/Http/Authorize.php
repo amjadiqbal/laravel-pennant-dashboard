@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AmjadIqbal\PennantDashboard\Http;
 
+use AmjadIqbal\PennantDashboard\Support\SchemaStatus;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -18,6 +19,12 @@ final class Authorize
         if (! $request->isMethodSafe()) {
             abort_if((bool) config('pennant-dashboard.read_only'), 403, 'The Pennant dashboard is read-only.');
             abort_unless(Gate::check('managePennantDashboard', [$request]), 403);
+
+            // Un-migrated tables would fail mid-write with a 500: refuse up front and say why.
+            $status = SchemaStatus::check();
+            if ($status !== SchemaStatus::OK) {
+                return redirect()->back()->withErrors(['schema' => SchemaStatus::message($status)]);
+            }
         }
 
         return $next($request);

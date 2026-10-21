@@ -6,6 +6,7 @@ namespace AmjadIqbal\PennantDashboard;
 
 use AmjadIqbal\PennantDashboard\Models\Override;
 use AmjadIqbal\PennantDashboard\Models\Rule;
+use AmjadIqbal\PennantDashboard\Support\SchemaStatus;
 use Closure;
 use Laravel\Pennant\Feature;
 use Throwable;
@@ -21,6 +22,9 @@ class RolloutManager
 
     /** @var array<string, int|null> */
     private array $percentages = [];
+
+    /** SchemaStatus of the package tables, checked on the first read of the request. */
+    private ?string $schema = null;
 
     public function decide(string $feature, mixed $scope, mixed $default = false, ?string $store = null): mixed
     {
@@ -53,12 +57,10 @@ class RolloutManager
         $memo = $store."\0".$feature;
 
         if (! array_key_exists($memo, $this->percentages)) {
-            try {
-                $this->percentages[$memo] = Rule::query()->where('store', $store)->where('feature', $feature)->value('percentage');
-            } catch (Throwable) {
-                // Tables not migrated yet: behave as if the dashboard had never been used.
-                $this->percentages[$memo] = null;
-            }
+            $this->percentages[$memo] = $this->read(
+                fn (bool $byStore) => Rule::query()->when($byStore, fn ($q) => $q->where('store', $store))->where('feature', $feature)->value('percentage'),
+                null,
+            );
         }
 
         return $this->percentages[$memo] === null ? null : (int) $this->percentages[$memo];
@@ -71,16 +73,44 @@ class RolloutManager
         $memo = $store."\0".$feature;
 
         if (! array_key_exists($memo, $this->overrides)) {
-            try {
-                $this->overrides[$memo] = Override::query()->where('store', $store)->where('feature', $feature)->pluck('value', 'scope')
+            $this->overrides[$memo] = $this->read(
+                fn (bool $byStore) => Override::query()->when($byStore, fn ($q) => $q->where('store', $store))->where('feature', $feature)->pluck('value', 'scope')
                     ->map(fn ($value) => json_decode((string) $value, true))
-                    ->all();
-            } catch (Throwable) {
-                $this->overrides[$memo] = [];
-            }
+                    ->all(),
+                [],
+            );
         }
 
         return $this->overrides[$memo];
+    }
+
+    /**
+     * Run a read scoped to the store. The schema is checked once per request first: a failed query
+     * is not a reliable signal (SQLite treats an unknown "store" column as a string literal and just
+     * returns nothing). With tables still at 1.0.0 (no store column) it reads the way 1.0.0 did, so
+     * rollouts keep working until the app migrates; missing tables fall back to the default. Either
+     * way the log gets one warning saying to run the migration.
+     *
+     * @template T
+     *
+     * @param  Closure(bool): T  $query  receives whether to filter by store
+     * @param  T  $fallback
+     * @return T
+     */
+    private function read(Closure $query, mixed $fallback): mixed
+    {
+        $this->schema ??= SchemaStatus::check();
+        SchemaStatus::warnOnce($this->schema);
+
+        if ($this->schema === SchemaStatus::MISSING) {
+            return $fallback;
+        }
+
+        try {
+            return $query($this->schema === SchemaStatus::OK);
+        } catch (Throwable) {
+            return $fallback;
+        }
     }
 
     public static function store(?string $store = null): string
