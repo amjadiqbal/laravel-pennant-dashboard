@@ -85,7 +85,7 @@
         .yes { color: var(--on-text); font-weight: 700; }
         .no { color: var(--muted); }
         .pager { display: flex; gap: 10px; align-items: center; margin-top: 12px; }
-        footer.foot { color: var(--muted); font-size: 12.5px; padding: 0 0 32px; }
+        footer.foot { color: var(--muted); font-size: 12.5px; padding-bottom: 32px; }
         @media (max-width: 640px) { .hide-sm { display: none; } h1 { font-size: 19px; } }
     </style>
 </head>

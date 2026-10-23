@@ -113,3 +113,9 @@ it('marks only the picker fields for the search pick script, not the hidden row 
     expect(substr_count($html, 'name="scope_key" data-scope-picker'))->toBe(1)
         ->and($html)->toContain('<input type="hidden" name="scope_key" value="'.e(User::class).'|1">');
 });
+
+it('keeps the side gutter on the footer', function () {
+    $this->get('/pennant')->assertOk()
+        ->assertSee('<footer class="wrap foot">', false)
+        ->assertDontSee('padding: 0 0 32px', false);
+});

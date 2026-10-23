@@ -81,12 +81,17 @@ Open `/pennant` in your browser. Outside `local` it returns 403 until you define
 
 ## Upgrading
 
-Run the migrations after every upgrade:
+Run the migrations and clear compiled views after every upgrade:
 
 ```bash
 composer update amjadiqbal/laravel-pennant-dashboard
 php artisan migrate
+php artisan view:clear
 ```
+
+`view:clear` matters because Composer's download keeps the package files' original dates. They can be
+older than the views your app compiled from the previous version, so Laravel would keep serving the old
+compiled dashboard (for example, without the extra tabs added in 1.1.0).
 
 1.0.1 added a `store` column to the rollout and override tables. If you set `run_migrations` to
 `false` and published the migrations, publish again first (only the new file is copied):

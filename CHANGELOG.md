@@ -6,6 +6,17 @@ All notable changes to `laravel-pennant-dashboard` are documented here. The form
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-23
+
+### Fixed
+- The footer lost its side padding (`footer.foot` overrode `.wrap`), so its text sat against the left
+  edge of the window.
+
+### Upgrade note
+- After upgrading, run `php artisan view:clear` as well as `php artisan migrate`. Composer keeps the
+  package files' original dates, which can be older than views compiled from the previous version, so
+  Laravel may keep showing the old dashboard (seen with the 1.1.0 tabs).
+
 ## [1.1.0] - 2026-10-23
 
 ### Added
