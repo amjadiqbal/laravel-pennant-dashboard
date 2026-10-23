@@ -212,6 +212,7 @@ php artisan vendor:publish --tag=pennant-dashboard-config
 | `audit.retention_days` | `180` | Older entries are removed by `php artisan model:prune` |
 | `connection`, `tables` | default connection | Where the package's three tables live |
 | `run_migrations` | `true` | Set `false` after publishing the migration (`--tag=pennant-dashboard-migrations`) |
+| `tabs` | `[]` | Extra nav tabs from your app or other packages: `['label' => 'Experiments', 'route' => 'pennant-experiments.index', 'active' => 'pennant-experiments.*']`. Entries whose route doesn't exist (or needs parameters) are skipped |
 
 To prune the audit log, schedule Laravel's prune command for the model:
 

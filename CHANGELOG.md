@@ -6,6 +6,14 @@ All notable changes to `laravel-pennant-dashboard` are documented here. The form
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-23
+
+### Added
+- `tabs` config key for extra nav tabs, so the app or another package (such as an experiments
+  package) can add its own page to the dashboard header without copying the layout. Each entry is
+  `['label' => ..., 'route' => ..., 'active' => route pattern]`; entries with an unknown route, a route
+  that needs parameters, or a missing label are skipped.
+
 ## [1.0.2] - 2026-10-21
 
 ### Fixed

@@ -99,6 +99,9 @@
         <nav class="tabs">
             <a href="{{ route('pennant-dashboard.index', ['store' => $store->name]) }}" @class(['active' => request()->routeIs('pennant-dashboard.index', 'pennant-dashboard.feature')])>Features</a>
             <a href="{{ route('pennant-dashboard.audit', ['store' => $store->name]) }}" @class(['active' => request()->routeIs('pennant-dashboard.audit')])>Audit log</a>
+            @foreach (\AmjadIqbal\PennantDashboard\Support\ExtraTabs::all() as $tab)
+                <a href="{{ $tab['url'] }}" @class(['active' => $tab['active']])>{{ $tab['label'] }}</a>
+            @endforeach
         </nav>
         <span class="spacer"></span>
         @if (count($stores) > 1)

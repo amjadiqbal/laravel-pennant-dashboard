@@ -65,4 +65,11 @@ return [
     'run_migrations' => true,
 
     'per_page' => 50,
+
+    /*
+    | Extra nav tabs, added by the app or by other packages. Entries whose route does not exist
+    | are skipped. 'active' is a route-name pattern, defaulting to the route itself.
+    | ['label' => 'Experiments', 'route' => 'pennant-experiments.index', 'active' => 'pennant-experiments.*']
+    */
+    'tabs' => [],
 ];
